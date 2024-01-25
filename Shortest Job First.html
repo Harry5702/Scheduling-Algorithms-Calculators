@@ -1,0 +1,187 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title style="font-weight: 900;">SCHEDULER SAGA</title>
+  <link rel="shortcut icon" href="icon.png" type="image/x-icon">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="SB">
+    <h2>Scheduling Algorithms</h2>
+    <hr><br>
+      <ul>
+        <li><a href="Index.html">HOME</a></li>
+        <li><a href="FCFS.html">First Come First Serve (FCFS)</a></li>
+        <li><a href="Shortest Job First.html">Shortest Job First (SJF)</a></li>
+        <li><a href="Round Robin.html">Round Robin (RR)</a></li>
+        <li><a href="Priority Sheduling.html">Priority Scheduling (PS)</a></li>
+        <li><a href="Shortest Remaining Time First.html">Shortest Remaining Time First (SRTF)</a></li>
+        <li><a href="Multilevel Feedback Queue.html">Multilevel Feedback Queue(MLFQ)</a></li>
+      </ul>
+  </div>
+
+
+  
+  <div class="content2">
+    <h2 style="margin-left :32px;">Shortest Job first(SJF)</h2>
+    
+    <input type="number" id="numberOfProcesses"class="input" placeholder="Enter number of Processes">
+    <button onclick="createProcessTable()"class="InputButton">Submit</button>
+
+    <div id="processesSection" style="display: none;">
+      
+
+      <table id="processesTable">
+        <thead>
+          <tr>
+            <th>Process</th>
+            <th>Burst Time</th>
+          </tr>
+        </thead>
+        <tbody id="processesData">
+          <!-- Table rows will be dynamically populated here -->
+        </tbody>
+      </table>
+
+      <button onclick="calculateAverageWaitingTime()"class="averagebutton">Calculate Average Waiting Time</button>
+    </div>
+    <table id="gantt">
+      <tbody></tbody>
+    </table>
+    <div id="datatable" style="display: none;">
+      <table id="avgTimeTable">
+        <thead>
+          <tr>
+            <th>Process</th>
+            <th>Burst Time</th>
+            <th>Completion Time</th>
+            <th>Turnaround Time</th>
+            <th>Waiting Time</th>
+            <th>Response Time</th>
+          </tr>
+        </thead>
+        <tbody id="avgTimeData">
+          
+        </tbody>
+      </table>
+      <p id="averageWaitingTime" style="margin-left: 32px;">Average Waiting Time: </p>
+    </div>
+
+    <script>
+      // Function to create process table based on user input
+      function createProcessTable() {
+        const numberOfProcesses = document.getElementById("numberOfProcesses").value;
+        const processesData = document.getElementById("processesData");
+        processesData.innerHTML = ""; // Clear previous table content
+
+        // Create table rows based on user input
+        for (let i = 1; i <= numberOfProcesses; i++) {
+          const newRow = document.createElement("tr");
+          newRow.innerHTML = `
+            <td>P${i}</td>
+            <td class="editableCell" contenteditable="true" onfocus="clearContent(this)">0</td>
+          `;
+          processesData.appendChild(newRow);
+        }
+
+        // Show the processes section
+        document.getElementById("processesSection").style.display = "block";
+      }
+
+      // Function to calculate average waiting time
+async function calculateAverageWaitingTime() {
+        const processesData = document.getElementById("processesData").getElementsByTagName("tr");
+        let totalWaitingTime = 0;
+        let sum =0;
+        
+        let temp_arr = [];
+        let processes=[];
+        for (let i = 0; i < processesData.length; i++) {
+          const burstTime = parseInt(processesData[i].getElementsByTagName("td")[1].textContent);
+          processes[i]=i+1;
+         temp_arr.push(burstTime);
+        }
+
+        for(let i=0; i<processesData.length; i++)
+        {
+          for(let j=0; j<processesData.length-1; j++)
+          {
+            if(temp_arr[j]>temp_arr[j+1])
+            {
+              let temp1 = temp_arr[j];
+              temp_arr[j]=temp_arr[j+1];
+              temp_arr[j+1]=temp1;
+
+              let temp2=processes[j];
+              processes[j]=processes[j+1];
+              processes[j+1]=temp2;
+            }
+
+          }
+          
+        }
+        //gaant chart banane ka code
+        const ganttc = document.getElementById("gantt");
+        ganttc.innerHTML = "";
+        const g_row = document.createElement("tr");
+        const g_row_1 = document.createElement("tr");
+        ganttc.appendChild(g_row);
+        ganttc.appendChild(g_row_1);
+        // Sum up waiting times for each process
+        const avgTimeData = document.getElementById("avgTimeData");
+        for (let i = 0; i < processesData.length; i++) {
+         totalWaitingTime += temp_arr[i]; 
+          
+          const completion_time = totalWaitingTime;
+          const turnaround_time = completion_time - 0;
+          const waiting_time = turnaround_time - temp_arr[i];
+          const response_time = totalWaitingTime - temp_arr[i];
+          sum += waiting_time;
+          const newRow = document.createElement("tr");
+          newRow.innerHTML = `
+            <td>P${processes[i]}</td>
+            <td>${temp_arr[i]}</td>
+            <td>${completion_time}</td>
+            <td>${turnaround_time}</td>
+            <td>${waiting_time}</td>
+            <td>${response_time}</td>
+          `;
+          avgTimeData.appendChild(newRow);
+          //gannt chart ka code
+          const cell = document.createElement("td");
+          const cell_1 = document.createElement("td");
+          cell_1.style.border=`none`;
+          cell_1.style.textAlign=`right`;
+          cell_1.textContent = `${completion_time}`;
+          cell.textContent = processesData[i].getElementsByTagName("td")[0].textContent;
+          cell.style.width = `${temp_arr[i]+30}px`;
+          g_row.appendChild(cell);
+          g_row_1.appendChild(cell_1);
+          await sleep(0.5);
+        }
+        document.getElementById("datatable").style.display = `block`;
+       // Calculate average waiting time
+       const numberOfProcesses = processesData.length;
+        const averageWaitingTime = sum / numberOfProcesses;
+
+        // Display the average waiting time
+        const averageWaitingTimeDisplay = document.getElementById("averageWaitingTime");
+       averageWaitingTimeDisplay.textContent = `Average Waiting Time: ${averageWaitingTime} ms`;
+      }
+async function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms*1000));
+      }
+      function clearContent(element) {
+      element.textContent = '';
+    }
+    </script>
+
+    
+  </div>
+
+
+
+</body>
+</html>

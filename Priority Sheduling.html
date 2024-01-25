@@ -1,0 +1,213 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title style="font-weight: 900;">SCHEDULER SAGA</title>
+  <link rel="shortcut icon" href="icon.png" type="image/x-icon">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="mcontent">
+    <div class="SB">
+      <h2>Scheduling Algorithms</h2>
+      <hr><br>
+        <ul>
+          <li><a href="Index.html">HOME</a></li>
+          <li><a href="FCFS.html">First Come First Serve (FCFS)</a></li>
+          <li><a href="Shortest Job First.html">Shortest Job First (SJF)</a></li>
+          <li><a href="Round Robin.html">Round Robin (RR)</a></li>
+          <li><a href="Priority Sheduling.html">Priority Scheduling (PS)</a></li>
+          <li><a href="Shortest Remaining Time First.html">Shortest Remaining Time First (SRTF)</a></li>
+          <li><a href="Multilevel Feedback Queue.html">Multilevel Feedback Queue(MLFQ)</a></li>
+        </ul>
+    </div>
+
+    
+    <div class="content2">
+      <h2 style="margin-left :32px;">Priority scheduling</h2>
+      
+      <input type="number" id="numberOfProcesses" class="input" placeholder="Enter number of Processes">
+      <button onclick="createProcessTable()"class="InputButton">Submit</button>
+
+      <div id="processesSection" style="display: none;">
+        
+
+        <table id="processesTable">
+          <thead>
+            <tr>
+              <th>Process</th>
+              <th>Burst Time</th>
+              <th>Priority</th>
+              
+            </tr>
+          </thead>
+          <tbody id="processesData">
+            <!-- Table rows will be dynamically populated here -->
+          </tbody>
+        </table>
+
+        <button onclick="calculateAverageWaitingTime()" class="calculatebutton">Calculate </button>
+      </div>
+      <table id="gantt">
+        <tbody></tbody>
+      </table>
+      <div id="datatable" style="display: none;">
+        <table id="avgTimeTable">
+          <thead>
+            <tr>
+              <th>Process</th>
+              <th>Burst Time</th>
+              <th>Arrival Time</th>
+              <th>Priority</th>
+              <th>Completion Time</th>
+              <th>Waiting Time</th>
+              <th>Turnaround Time</th>
+            <th>Response Time</th>
+            </tr>
+          </thead>
+          <tbody id="avgTimeData">
+            
+          </tbody>
+        </table>
+
+        <p id="averageWaitingTime" style="margin-left: 32px;">
+        
+        </p>
+      </div>
+    </div>
+  </div>
+
+  
+    <script>
+      
+      function createProcessTable() {
+        const numberOfProcesses = document.getElementById("numberOfProcesses").value;
+        const processesData = document.getElementById("processesData");
+        processesData.innerHTML = ""; 
+
+        for (let i = 1; i <= numberOfProcesses; i++) {
+          const newRow = document.createElement("tr");
+          newRow.innerHTML = `
+            <td>P${i}</td>
+            <td class="editableCell" contenteditable="true" onfocus="clearContent(this)">0</td>
+            <td class="editableCell" contenteditable="true" onfocus="clearContent(this)">0</td>
+          `;
+          processesData.appendChild(newRow);
+        }
+        document.getElementById("processesSection").style.display = "block";
+      }
+      
+async function calculateAverageWaitingTime() {
+        const processesData = document.getElementById("processesData").getElementsByTagName("tr");
+        const numberOfProcesses = document.getElementById("numberOfProcesses").value;
+        
+        let sum=0;
+        let arrivalTime=0;
+        let completion_time=[];
+        let processes=[];
+        let burstTime=[];
+        let priority=[];
+        let turnaround_time=[];
+        let waiting_time=[];
+        let response_time=[];
+        let sum_of_waiting_time=0;
+        for (let i = 0; i < processesData.length; i++) {
+           burstTime[i]= parseInt(processesData[i].getElementsByTagName("td")[1].textContent);
+           priority[i] = parseInt(processesData[i].getElementsByTagName("td")[2].textContent);
+           processes[i]=i+1;
+        }
+
+        for(let i=0; i<processesData.length; i++)
+        {
+          for(let j=0; j<processesData.length-1; j++)
+          {
+            if(priority[j]>priority[j+1])
+            {
+              let temp=priority[j];
+              priority[j]=priority[j+1];
+              priority[j+1]=temp;
+
+              let temp1 = burstTime[j];
+              burstTime[j]=burstTime[j+1];
+              burstTime[j+1]=temp1;
+
+              let temp2=processes[j];
+              processes[j]=processes[j+1];
+              processes[j+1]=temp2;
+            }
+
+          }
+
+        }
+
+        for(let i=0;i<processesData.length;i++)
+        {
+          response_time[i]=sum;
+          sum += burstTime[i];
+          completion_time[i]=sum;
+          turnaround_time[i]=completion_time[i]-arrivalTime;
+          waiting_time[i]=turnaround_time[i]-burstTime[i];
+          sum_of_waiting_time += waiting_time[i];
+        }
+        
+        // avg waiting time ki claculation kar rahe han
+        const averageWaitingTime = sum_of_waiting_time / numberOfProcesses;
+        // avgrage waiting time ko display karne ke liye
+        const averageWaitingTimeDisplay = document.getElementById("averageWaitingTime");
+        averageWaitingTimeDisplay.textContent = `Average Waiting Time: ${averageWaitingTime} ms`;
+        //gantt chart create kar rahe han
+        const ganttc = document.getElementById("gantt");
+        ganttc.innerHTML = "";
+        const g_row = document.createElement("tr");
+        const g_row_1 = document.createElement("tr");
+        ganttc.appendChild(g_row);
+        ganttc.appendChild(g_row_1);
+        for (let i = 0; i < numberOfProcesses; i++) {
+          const cell = document.createElement("td");
+          const cell_1 = document.createElement("td");
+          cell_1.style.border=`none`;
+          cell_1.style.textAlign=`right`;
+          cell_1.textContent = `${completion_time[i]}`;
+          cell.textContent = `P${processes[i]}`;
+          cell.style.width = `${burstTime[i]+30}px`;
+          g_row.appendChild(cell);
+          g_row_1.appendChild(cell_1);
+          await sleep(0.5);
+        }
+        const processesData1 = document.getElementById("avgTimeData");
+        processesData1.innerHTML = "";
+        // completion time wala table create kiya hai
+       for (let i = 1; i <= numberOfProcesses; i++) 
+        {
+          const newRow = document.createElement("tr");
+          newRow.innerHTML = `
+          <td>P${processes[i-1]}</td>
+          <td>${burstTime[i-1]} </td>
+          <td>${arrivalTime} </td>
+          <td>${priority[i-1]} </td>
+          <td>${completion_time[i-1]} </td>
+          <td>${waiting_time[i-1]}</td>
+          <td>${turnaround_time[i-1]}</td>
+          <td>${response_time[i-1]}</td>
+          `;
+          processesData1.appendChild(newRow);
+        }
+
+    document.getElementById("datatable").style.display = "block";
+
+   }
+   async function sleep(ms) {
+        return new Promise((resolve) => setTimeout(resolve, ms*1000));
+      }
+      function clearContent(element) {
+      element.textContent = '';
+    }
+    </script>
+
+
+
+
+
+</body>
+</html>
